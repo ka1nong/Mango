@@ -4,11 +4,13 @@ import "fmt"
 import "stockmanger"
 
 func main() {
-	/*  stockmgr := stockmanger.NewStockMgr();
-	    if err :=stockmgr.start() err != nil {
-	    	fmt.Println("start error");
-	    }
-	*/
-	fmt.Println("start success")
 
+	fmt.Println("main start")
+	stockmgr := stockmanger.NewStockMgr()
+	err := stockmgr.Start()
+	if err != nil {
+		fmt.Println("stock mgr return  error!")
+	}
+
+	fmt.Println("main end!")
 }
