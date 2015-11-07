@@ -3,6 +3,9 @@ package stockmanger
 import "download"
 import "fmt"
 
+type stockInfo struct {
+}
+
 type StockMgr struct {
 	stockUrl string
 }
@@ -22,4 +25,8 @@ func (mgr *StockMgr) Start() error {
 
 	fmt.Println("stock manger end run")
 	return nil
+}
+
+func (mgr *StockMgr) getStockMapByparseFile(localPath string) (stockMap map[string]stockInfo, err error) {
+	return stockMap, err
 }
