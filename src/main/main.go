@@ -9,7 +9,7 @@ func main() {
 	stockmgr := stockmanger.NewStockMgr()
 	err := stockmgr.Start()
 	if err != nil {
-		fmt.Println("stock mgr return  error!")
+		fmt.Println(err)
 	}
 
 	fmt.Println("main end!")
