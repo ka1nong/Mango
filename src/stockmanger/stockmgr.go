@@ -20,13 +20,15 @@ type stockInfo struct {
 }
 
 type StockMgr struct {
-	stockUrl string
-	stocks   map[string]stockInfo
+	stockMapUrl string
+	stockUrl    string
+	stocks      map[string]stockInfo
 }
 
 func NewStockMgr() *StockMgr {
 	mgr := new(StockMgr)
-	mgr.stockUrl = "http://quote.eastmoney.com/stocklist.html#sz" //http://quote.eastmoney.com/stocklist.html"
+	mgr.stockMapUrl = "http://quote.eastmoney.com/stocklist.html#sz" //http://quote.eastmoney.com/stocklist.html"
+	mgr.stockUrl = "http://hq.sinajs.cn/list="
 	return mgr
 }
 
@@ -38,18 +40,43 @@ func (mgr *StockMgr) Start() error {
 		return err
 	}
 
-	//dwMgr := download.Instance()
-	//	for _, info := range mgr.stocks {
-	//		dwMgr.Download(info.url)
-	//	}
+	err = mgr.loadSpecificStockInfo()
+	if err != nil {
+		return err
+	}
 
 	fmt.Println("stock manger end run")
 	return nil
 }
 
+func (mgr *StockMgr) loadSpecificStockInfo() error {
+	dwMgr := download.Instance()
+	for key, _ := range mgr.stocks {
+		localPath, err := dwMgr.Download(mgr.stockUrl + string("sh") + key)
+		buf, err := ioutil.ReadFile(localPath)
+		if err != nil {
+			fmt.Println("download specific stock info error .the code is %s", key)
+		}
+		stockText := string(buf)
+		index := strings.Index(stockText, string("=\""))
+		if index == -1 || index > len(stockText)-1 {
+			fmt.Println("download specific stock info error .the code is %s", key)
+			continue
+		}
+		stockText = stockText[index+len(string("=\"")) : len(stockText)-3]
+		stockInfos := strings.Split(stockText, string(","))
+		for _, value := range stockInfos {
+			fmt.Println(value)
+		}
+		return nil
+	}
+	//http://blog.sciencenet.cn/home.php?mod=space&uid=461456&do=blog&id=455211
+	return nil
+}
+
 func (mgr *StockMgr) loadStockMap() error {
 	dwMgr := download.Instance()
-	localPath, err := dwMgr.Download(mgr.stockUrl)
+	localPath, err := dwMgr.Download(mgr.stockMapUrl)
 	bHasRemoteStockMap := true
 	if err != nil {
 		fmt.Println("load remote stock map error")
