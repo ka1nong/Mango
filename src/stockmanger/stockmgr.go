@@ -37,11 +37,13 @@ func (mgr *StockMgr) Start() error {
 	fmt.Println("stock manger start run")
 	err := mgr.loadStockMap()
 	if err != nil {
+		fmt.Println(err)
 		return err
 	}
 
 	err = mgr.loadSpecificStockInfo()
 	if err != nil {
+		fmt.Println(err)
 		return err
 	}
 
