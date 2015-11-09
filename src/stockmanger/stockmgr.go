@@ -1,3 +1,6 @@
+/*
+建立数据库的股票管理模块，是程序在一个新地方运行的基础
+*/
 package stockmanger
 
 import "download"
