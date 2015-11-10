@@ -10,6 +10,7 @@ import "strings"
 import "mahonia"
 import "os"
 import "strconv"
+import "common"
 
 type Error string
 
@@ -28,29 +29,75 @@ type StockMgr struct {
 	stocks      map[string]stockInfo
 }
 
-func NewStockMgr() *StockMgr {
-	mgr := new(StockMgr)
-	mgr.stockMapUrl = "http://quote.eastmoney.com/stocklist.html#sz" //http://quote.eastmoney.com/stocklist.html"
-	mgr.stockUrl = "http://hq.sinajs.cn/list="
-	return mgr
+var instance *StockMgr
+
+func Instance() *StockMgr {
+	if instance == nil {
+		instance = new(StockMgr)
+		instance.stockMapUrl = "http://quote.eastmoney.com/stocklist.html#sz" //http://quote.eastmoney.com/stocklist.html"
+		instance.stockUrl = "http://hq.sinajs.cn/list="
+	}
+	return instance
 }
 
 func (mgr *StockMgr) Start() error {
-
 	fmt.Println("stock manger start run")
-	err := mgr.loadStockMap()
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-
-	err = mgr.loadSpecificStockInfo()
+	err := mgr.updateMainDatabase()
 	if err != nil {
 		fmt.Println(err)
 		return err
 	}
 
 	fmt.Println("stock manger end run")
+	return nil
+}
+
+func (mgr *StockMgr) updateMainDatabase() error {
+	dataMgr := common.Instance()
+	iMainData, err := dataMgr.GetIMainData()
+	if err != nil {
+		fmt.Println("local haven't main table")
+		return err
+	}
+	count := iMainData.GetStockCount()
+	fmt.Println(count)
+	err = mgr.loadStockMap()
+	if err != nil {
+		return err
+	}
+
+	if count == 0 {
+		err = mgr.loadStockMap()
+		if err != nil {
+			return err
+		}
+		//建立本地库
+		codes := make([]string, len(mgr.stocks))
+		names := make([]string, len(mgr.stocks))
+		i := 0
+		for key, info := range mgr.stocks {
+			codes[i] = key
+			names[i] = info.name
+			i++
+		}
+		fmt.Println(codes[0])
+		fmt.Println(names[0])
+		fmt.Println(codes[len(mgr.stocks)])
+		fmt.Println(names[len(mgr.stocks)])
+		err = iMainData.InsertData(codes, names)
+		if err != nil {
+			return err
+		}
+
+	} else {
+		err = mgr.loadStockMap()
+		if err != nil {
+			//远程下载失败，但是本地存在，则不认为是错误
+			return nil
+		}
+
+		//todo:比较一下是否要用远程库
+	}
 	return nil
 }
 

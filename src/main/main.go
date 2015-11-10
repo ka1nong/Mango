@@ -27,18 +27,8 @@ func main() {
 		case 0:
 			return
 		case 1:
-			fmt.Println("this operate is important，enter key 1 continue")
-			reader = bufio.NewReader(os.Stdin)
-			input, _ = reader.ReadBytes('\n')
-			value, err := strconv.Atoi(string(input[0]))
-			if err != nil {
-				fmt.Println(err)
-			} else if value == 1 {
-				stockmgr := stockmanger.NewStockMgr()
-				go stockmgr.Start()
-			} else {
-				fmt.Println("enter key error, return main menu")
-			}
+			stockmgr := stockmanger.Instance()
+			go stockmgr.Start()
 
 		default:
 			fmt.Println("chose error!")
