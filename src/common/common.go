@@ -116,15 +116,15 @@ func (mgr *DataMgr) open(dataBaseName string) (data IData, err error) {
 			return nil, err
 		}
 	} else {
-		//"select code, name from" + MAIN_TABLE + "  where code = " + dataBaseName
-		rows, err := db.Query("select code, name from stockList  where code = " + dataBaseName)
+		rows, err := db.Query("select code, name from " + MAIN_TABLE + "  where code = " + dataBaseName)
 		if err != nil {
 			fmt.Print(err)
 			return nil, err
 		}
 		defer rows.Close()
-		//create table
-		stock_database := dataBaseName + "(time VARCHAR(40)  PRIMARY KEY ,kaipan VARCHAR(40) NOT NULL)"
+		//http://table.finance.yahoo.com/table.csv?s=000001.sz
+		//create table 时间，开盘、最高、收盘、最低
+		stock_database := dataBaseName + "(data  INTEGER  PRIMARY KEY, open VARCHAR(40), hight VARCHAR(40), low VARCHAR(40), close VARCHAR(40))"
 		_, err = db.Exec("create table if not exists " + stock_database)
 		if err != nil {
 			fmt.Println(err)

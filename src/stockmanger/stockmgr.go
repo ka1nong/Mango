@@ -106,12 +106,6 @@ func (mgr *StockMgr) updateMainDatabase() error {
 
 func (mgr *StockMgr) updateStockSpecificDatabase() error {
 	dataMgr := common.Instance()
-	iMainData, err := dataMgr.GetIMainData()
-	if err != nil {
-		fmt.Println("local haven't main table")
-		return err
-	}
-	defer iMainData.Close()
 	count := 0
 	for key, _ := range mgr.stocks {
 		_, err := dataMgr.GetIData(key)
