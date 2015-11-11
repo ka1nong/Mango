@@ -54,9 +54,10 @@ func (data *CData) GetStockCount() int {
 }
 
 func (data *CData) InsertData(codes, names []string) error {
-	stmt, err := data.db.Prepare("INSERT INTO " + MAIN_TABLE + "(username, password) VALUES(?, ?)")
+	stmt, err := data.db.Prepare("INSERT INTO " + MAIN_TABLE + "(code, name) VALUES(?, ?)")
 	defer stmt.Close()
 	if err != nil {
+		fmt.Println(err)
 		return err
 	}
 	for i := 0; i < len(codes); i++ {
@@ -115,7 +116,21 @@ func (mgr *DataMgr) open(dataBaseName string) (data IData, err error) {
 			return nil, err
 		}
 	} else {
-
+		//"select code, name from" + MAIN_TABLE + "  where code = " + dataBaseName
+		rows, err := db.Query("select code, name from stockList  where code = " + dataBaseName)
+		if err != nil {
+			fmt.Print(err)
+			return nil, err
+		}
+		defer rows.Close()
+		//create table
+		stock_database := dataBaseName + "(time VARCHAR(40)  PRIMARY KEY ,kaipan VARCHAR(40) NOT NULL)"
+		_, err = db.Exec("create table if not exists " + stock_database)
+		if err != nil {
+			fmt.Println(err)
+			db.Close()
+			return nil, err
+		}
 	}
 
 	cdata := new(CData)

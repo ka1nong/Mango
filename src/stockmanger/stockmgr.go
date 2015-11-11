@@ -47,7 +47,11 @@ func (mgr *StockMgr) Start() error {
 		fmt.Println(err)
 		return err
 	}
-
+	err = mgr.updateStockSpecificDatabase()
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
 	fmt.Println("stock manger end run")
 	return nil
 }
@@ -59,6 +63,7 @@ func (mgr *StockMgr) updateMainDatabase() error {
 		fmt.Println("local haven't main table")
 		return err
 	}
+	defer iMainData.Close()
 	count := iMainData.GetStockCount()
 	fmt.Println(count)
 	err = mgr.loadStockMap()
@@ -78,12 +83,10 @@ func (mgr *StockMgr) updateMainDatabase() error {
 		for key, info := range mgr.stocks {
 			codes[i] = key
 			names[i] = info.name
-			i++
+			if len(codes[i]) != 0 && len(info.name) != 0 {
+				i++
+			}
 		}
-		fmt.Println(codes[0])
-		fmt.Println(names[0])
-		fmt.Println(codes[len(mgr.stocks)])
-		fmt.Println(names[len(mgr.stocks)])
 		err = iMainData.InsertData(codes, names)
 		if err != nil {
 			return err
@@ -101,27 +104,45 @@ func (mgr *StockMgr) updateMainDatabase() error {
 	return nil
 }
 
-func (mgr *StockMgr) loadSpecificStockInfo() error {
-	dwMgr := download.Instance()
+func (mgr *StockMgr) updateStockSpecificDatabase() error {
+	dataMgr := common.Instance()
+	iMainData, err := dataMgr.GetIMainData()
+	if err != nil {
+		fmt.Println("local haven't main table")
+		return err
+	}
+	defer iMainData.Close()
+	count := 0
 	for key, _ := range mgr.stocks {
-		localPath, err := dwMgr.Download(mgr.stockUrl + string("sh") + key)
-		buf, err := ioutil.ReadFile(localPath)
+		_, err := dataMgr.GetIData(key)
 		if err != nil {
-			fmt.Println("download specific stock info error .the code is %s", key)
-		}
-		stockText := string(buf)
-		index := strings.Index(stockText, string("=\""))
-		if index == -1 || index > len(stockText)-1 {
-			fmt.Println("download specific stock info error .the code is %s", key)
+			count++
 			continue
 		}
-		stockText = stockText[index+len(string("=\"")) : len(stockText)-3]
-		stockInfos := strings.Split(stockText, string(","))
-		for _, value := range stockInfos {
-			fmt.Println(value)
-		}
-		return nil
+
 	}
+	fmt.Println("the %d stock open error", count)
+	return nil
+}
+
+func (mgr *StockMgr) loadSpecificStockInfo(stockCode string) error {
+	dwMgr := download.Instance()
+	localPath, err := dwMgr.Download(mgr.stockUrl + string("sh") + stockCode)
+	buf, err := ioutil.ReadFile(localPath)
+	if err != nil {
+		fmt.Println("download specific stock info error .the code is %s", stockCode)
+	}
+	stockText := string(buf)
+	index := strings.Index(stockText, string("=\""))
+	if index == -1 || index > len(stockText)-1 {
+		fmt.Println("download specific stock info error .the code is %s", stockCode)
+	}
+	stockText = stockText[index+len(string("=\"")) : len(stockText)-3]
+	stockInfos := strings.Split(stockText, string(","))
+	for _, value := range stockInfos {
+		fmt.Println(value)
+	}
+
 	//http://blog.sciencenet.cn/home.php?mod=space&uid=461456&do=blog&id=455211
 	return nil
 }

@@ -17,8 +17,8 @@ func main() {
 		fmt.Println("//-------------------")
 		fmt.Println("please enter key.")
 		reader := bufio.NewReader(os.Stdin)
-		input, _ := reader.ReadBytes('\n')
-		chose, err := strconv.Atoi(string(input[0]))
+		_, _ = reader.ReadBytes('\n')
+		chose, err := strconv.Atoi(string("1"))
 		if err != nil {
 			fmt.Println(err)
 			return
