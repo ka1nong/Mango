@@ -87,7 +87,7 @@ func (mgr *StockMgr) updateMainDatabase() error {
 				i++
 			}
 		}
-		err = iMainData.InsertData(codes, names)
+		err = iMainData.InsertMainData(codes, names)
 		if err != nil {
 			return err
 		}
@@ -108,11 +108,12 @@ func (mgr *StockMgr) updateStockSpecificDatabase() error {
 	dataMgr := common.Instance()
 	count := 0
 	for key, _ := range mgr.stocks {
-		_, err := dataMgr.GetIData(key)
+		idata, err := dataMgr.GetIData(key)
 		if err != nil {
 			count++
 			continue
 		}
+		idata.Close()
 
 	}
 	fmt.Println("the %d stock open error", count)

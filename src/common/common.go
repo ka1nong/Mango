@@ -18,20 +18,60 @@ const (
 
 type IData interface {
 	Close()
+	InsertData(args ...interface{}) error
 }
 type IMainData interface {
 	IData
 	GetStockCount() int
-	InsertData(codes, names []string) error
+	InsertMainData(codes, names []string) error
 }
 
 type CData struct {
-	db *sql.DB
+	db         *sql.DB
+	stock_name string
 }
 
 //idata func
 func (data *CData) Close() {
 	data.db.Close()
+}
+
+func (data *CData) InsertData(args ...interface{}) error {
+	i := 0
+	//时间，开盘、最高、收盘、最低,
+	var date []int
+	var open, hight, close, low []string
+	for _, arg := range args {
+		switch i {
+		case 0:
+			date = arg.([]int)
+		case 1:
+			open = arg.([]string)
+		case 2:
+			hight = arg.([]string)
+		case 3:
+			close = arg.([]string)
+		case 4:
+			low = arg.([]string)
+		default:
+		}
+		i++
+	}
+	//这里要变成一个事务，还要查询是否存在该表，还得确定一下是插入哪些值，有咩有办法做到扩展
+	stmt, err := data.db.Prepare("INSERT INTO " + data.stock_name + "(date, open, hight, close, low) VALUES(?, ?)")
+	defer stmt.Close()
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	for i := 0; i < len(date); i++ {
+		_, err = stmt.Exec(date[i], open[i], hight[i], close[i], low[i])
+		if err != nil {
+			continue
+		}
+	}
+	return nil
 }
 
 //-----------------------end----------------------------------
@@ -53,7 +93,7 @@ func (data *CData) GetStockCount() int {
 	return id
 }
 
-func (data *CData) InsertData(codes, names []string) error {
+func (data *CData) InsertMainData(codes, names []string) error {
 	stmt, err := data.db.Prepare("INSERT INTO " + MAIN_TABLE + "(code, name) VALUES(?, ?)")
 	defer stmt.Close()
 	if err != nil {
@@ -123,8 +163,11 @@ func (mgr *DataMgr) open(dataBaseName string) (data IData, err error) {
 		}
 		defer rows.Close()
 		//http://table.finance.yahoo.com/table.csv?s=000001.sz
-		//create table 时间，开盘、最高、收盘、最低
-		stock_database := dataBaseName + "(data  INTEGER  PRIMARY KEY, open VARCHAR(40), hight VARCHAR(40), low VARCHAR(40), close VARCHAR(40))"
+		//表名不能用纯数字，我加上stock
+		//create table 时间，开盘、最高、收盘、最低,
+		//社会需要的是熟工，而不是你的学习能力
+		dataBaseName = dataBaseName + "stock"
+		stock_database := dataBaseName + "(data  INTEGER  PRIMARY KEY, open VARCHAR(40),hight VARCHAR(40), low VARCHAR(40), close VARCHAR(40))"
 		_, err = db.Exec("create table if not exists " + stock_database)
 		if err != nil {
 			fmt.Println(err)
@@ -135,5 +178,6 @@ func (mgr *DataMgr) open(dataBaseName string) (data IData, err error) {
 
 	cdata := new(CData)
 	cdata.db = db
+	cdata.stock_name = dataBaseName
 	return IData(cdata), err
 }
