@@ -19,7 +19,10 @@ const (
 type IData interface {
 	Close()
 	InsertData(args ...interface{}) error
+	GetInfoCount()int 
+	GetData(count int )()
 }
+
 type IMainData interface {
 	IData
 	GetStockCount() int
@@ -31,7 +34,10 @@ type CData struct {
 	stock_name string
 }
 
-//idata func
+//idata func-----------------------
+func (data *CData) GetData(count int)() {
+}
+
 func (data *CData) Close() {
 	data.db.Close()
 }
@@ -57,23 +63,44 @@ func (data *CData) InsertData(args ...interface{}) error {
 		}
 		i++
 	}
-	//这里要变成一个事务，还要查询是否存在该表，还得确定一下是插入哪些值，有咩有办法做到扩展
-	stmt, err := data.db.Prepare("INSERT INTO " + data.stock_name + "(date, open, hight, close, low) VALUES(?, ?)")
+	tx,_:= data.db.Begin()
+	//还得确定一下是插入哪些值，有咩有办法做到扩展
+	stmt, err := data.db.Prepare("INSERT INTO " + data.stock_name + "(date, open, hight, close, low) VALUES(?, ?, ?,?, ?)")
 	defer stmt.Close()
 	if err != nil {
 		fmt.Println(err)
+		tx.Rollback()
 		return err
 	}
 
 	for i := 0; i < len(date); i++ {
 		_, err = stmt.Exec(date[i], open[i], hight[i], close[i], low[i])
 		if err != nil {
-			continue
+			fmt.Println(err)
+			tx.Rollback()
+			return  err
 		}
 	}
+	err = tx.Commit() //err := Tx.Rollback()
 	return nil
 }
 
+func (data *CData) GetInfoCount()int{
+	rows, err := data.db.Query("select count(*) from " + data.stock_name)
+	if err != nil {
+		fmt.Println(err)
+		return 0
+	}
+	var id int
+	for rows.Next() {
+		err := rows.Scan(&id)
+		if err != nil {
+			fmt.Println(err)
+			return 0
+		}
+	}
+	return id
+}
 //-----------------------end----------------------------------
 //main func
 func (data *CData) GetStockCount() int {
@@ -167,7 +194,7 @@ func (mgr *DataMgr) open(dataBaseName string) (data IData, err error) {
 		//create table 时间，开盘、最高、收盘、最低,
 		//社会需要的是熟工，而不是你的学习能力
 		dataBaseName = dataBaseName + "stock"
-		stock_database := dataBaseName + "(data  INTEGER  PRIMARY KEY, open VARCHAR(40),hight VARCHAR(40), low VARCHAR(40), close VARCHAR(40))"
+		stock_database := dataBaseName + "(data  INTEGER  PRIMARY KEY, open VARCHAR(40),hight VARCHAR(40), low VARCHAR(40), close VARCHAR(40))TYPE=INNODB"
 		_, err = db.Exec("create table if not exists " + stock_database)
 		if err != nil {
 			fmt.Println(err)
