@@ -18,7 +18,7 @@ const (
 
 type IData interface {
 	Close()
-	InsertData(args ...interface{}) error
+	InsertData(info map[string]interface) error
 	GetInfoCount()int 
 	GetData(count int )()
 }
@@ -42,29 +42,26 @@ func (data *CData) Close() {
 	data.db.Close()
 }
 
-func (data *CData) InsertData(args ...interface{}) error {
-	i := 0
+const (
+	DATE = "date"
+	OPEN = "open"
+	HIGHT = "hight"
+	CLOSE = "close"
+	LOW = "low"
+)
+
+func (data *CData) InsertData(info map[string]interface) error {
 	//时间，开盘、最高、收盘、最低,
-	var date []int
-	var open, hight, close, low []string
-	for _, arg := range args {
-		switch i {
-		case 0:
-			date = arg.([]int)
-		case 1:
-			open = arg.([]string)
-		case 2:
-			hight = arg.([]string)
-		case 3:
-			close = arg.([]string)
-		case 4:
-			low = arg.([]string)
-		default:
-		}
-		i++
+	date :=  info[DATE].(int)
+	if date == 0 {
+		return  nil
 	}
 	tx,_:= data.db.Begin()
-	//还得确定一下是插入哪些值，有咩有办法做到扩展
+	//IF (SELECT * FROM ipstats WHERE date='192.168.0.1)' {
+	//	    UPDATE ipstats SET clicks=clicks+1 WHERE ip='192.168.0.1';
+	//	} else {
+	//		 INSERT INTO ipstats (ip, clicks) VALUES ('192.168.0.1', 1);
+	//}
 	stmt, err := data.db.Prepare("INSERT INTO " + data.stock_name + "(date, open, hight, close, low) VALUES(?, ?, ?,?, ?)")
 	defer stmt.Close()
 	if err != nil {
@@ -74,7 +71,7 @@ func (data *CData) InsertData(args ...interface{}) error {
 	}
 
 	for i := 0; i < len(date); i++ {
-		_, err = stmt.Exec(date[i], open[i], hight[i], close[i], low[i])
+	//	_, err = stmt.Exec(date[i], open[i], hight[i], close[i], low[i])
 		if err != nil {
 			fmt.Println(err)
 			tx.Rollback()
