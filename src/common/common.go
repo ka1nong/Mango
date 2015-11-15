@@ -10,6 +10,12 @@ import "database/sql"
 import "fmt"
 import "strings"
 
+type Error string
+
+func (e Error) Error() string {
+	return string(e)
+}
+
 const (
 	USER       = "huangchen"
 	PASSWORD   = "199212"
@@ -18,15 +24,15 @@ const (
 
 type IData interface {
 	Close()
-	InsertData(info map[string]interface) error
-	GetInfoCount()int 
-	GetData(count int )()
+	InsertData(info map[string]interface{}) error
+	GetInfoCount() int
+	GetData(count int)
 }
 
 type IMainData interface {
 	IData
 	GetStockCount() int
-	InsertMainData(codes, names []string) error
+	InsertMainData(codes, names []string, address []int) error
 }
 
 type CData struct {
@@ -35,7 +41,7 @@ type CData struct {
 }
 
 //idata func-----------------------
-func (data *CData) GetData(count int)() {
+func (data *CData) GetData(count int) {
 }
 
 func (data *CData) Close() {
@@ -43,46 +49,53 @@ func (data *CData) Close() {
 }
 
 const (
-	DATE = "date"
-	OPEN = "open"
+	DATE  = "date"
+	OPEN  = "open"
 	HIGHT = "hight"
 	CLOSE = "close"
-	LOW = "low"
+	LOW   = "low"
 )
 
-func (data *CData) InsertData(info map[string]interface) error {
+func (data *CData) InsertData(info map[string]interface{}) error {
 	//时间，开盘、最高、收盘、最低,
-	date :=  info[DATE].(int)
+	date := info[DATE].(int)
 	if date == 0 {
-		return  nil
+		return Error("insert fmt error")
 	}
-	tx,_:= data.db.Begin()
-	//IF (SELECT * FROM ipstats WHERE date='192.168.0.1)' {
-	//	    UPDATE ipstats SET clicks=clicks+1 WHERE ip='192.168.0.1';
-	//	} else {
-	//		 INSERT INTO ipstats (ip, clicks) VALUES ('192.168.0.1', 1);
-	//}
-	stmt, err := data.db.Prepare("INSERT INTO " + data.stock_name + "(date, open, hight, close, low) VALUES(?, ?, ?,?, ?)")
-	defer stmt.Close()
+	rows, err := data.db.Query("select * from "+data.stock_name+" where date = ?", date)
 	if err != nil {
-		fmt.Println(err)
-		tx.Rollback()
 		return err
 	}
-
-	for i := 0; i < len(date); i++ {
-	//	_, err = stmt.Exec(date[i], open[i], hight[i], close[i], low[i])
+	defer rows.Close()
+	/*
+		tx, _ := data.db.Begin()
+		//IF (SELECT * FROM ipstats WHERE date='192.168.0.1)' {
+		//	    UPDATE ipstats SET clicks=clicks+1 WHERE ip='192.168.0.1';
+		//	} else {
+		//		 INSERT INTO ipstats (ip, clicks) VALUES ('192.168.0.1', 1);
+		//}
+		stmt, err := data.db.Prepare("INSERT INTO " + data.stock_name + "(date, open, hight, close, low) VALUES(?, ?, ?,?, ?)")
 		if err != nil {
 			fmt.Println(err)
 			tx.Rollback()
-			return  err
+			return err
 		}
-	}
-	err = tx.Commit() //err := Tx.Rollback()
+		defer stmt.Close()
+		//for i := 0; i < len(date); i++ {
+		//	_, err = stmt.Exec(date[i], open[i], hight[i], close[i], low[i])
+		if err != nil {
+			fmt.Println(err)
+			tx.Rollback()
+			return err
+		}
+		//}
+		err = tx.Commit() //err := Tx.Rollback()
+		return nil
+	*/
 	return nil
 }
 
-func (data *CData) GetInfoCount()int{
+func (data *CData) GetInfoCount() int {
 	rows, err := data.db.Query("select count(*) from " + data.stock_name)
 	if err != nil {
 		fmt.Println(err)
@@ -98,6 +111,7 @@ func (data *CData) GetInfoCount()int{
 	}
 	return id
 }
+
 //-----------------------end----------------------------------
 //main func
 func (data *CData) GetStockCount() int {
@@ -117,15 +131,15 @@ func (data *CData) GetStockCount() int {
 	return id
 }
 
-func (data *CData) InsertMainData(codes, names []string) error {
-	stmt, err := data.db.Prepare("INSERT INTO " + MAIN_TABLE + "(code, name) VALUES(?, ?)")
+func (data *CData) InsertMainData(codes, names []string, address []int) error {
+	stmt, err := data.db.Prepare("INSERT INTO " + MAIN_TABLE + "(code, name, address) VALUES(?, ?, ?)")
 	defer stmt.Close()
 	if err != nil {
 		fmt.Println(err)
 		return err
 	}
 	for i := 0; i < len(codes); i++ {
-		_, err = stmt.Exec(codes[i], names[i])
+		_, err = stmt.Exec(codes[i], names[i], address[i])
 		if err != nil {
 			continue
 		}
@@ -172,7 +186,7 @@ func (mgr *DataMgr) open(dataBaseName string) (data IData, err error) {
 
 	if strings.EqualFold(dataBaseName, MAIN_TABLE) {
 		//主表如果不存在则创建
-		stock_database := MAIN_TABLE + "(code VARCHAR(40)  PRIMARY KEY ,name VARCHAR(40) NOT NULL)"
+		stock_database := MAIN_TABLE + "(code VARCHAR(40)  PRIMARY KEY ,name VARCHAR(40) NOT NULL, address INTEGER)"
 		_, err := db.Exec("create table if not exists " + stock_database)
 		if err != nil {
 			fmt.Println(err)
@@ -191,7 +205,7 @@ func (mgr *DataMgr) open(dataBaseName string) (data IData, err error) {
 		//create table 时间，开盘、最高、收盘、最低,
 		//社会需要的是熟工，而不是你的学习能力
 		dataBaseName = dataBaseName + "stock"
-		stock_database := dataBaseName + "(data  INTEGER  PRIMARY KEY, open VARCHAR(40),hight VARCHAR(40), low VARCHAR(40), close VARCHAR(40))TYPE=INNODB"
+		stock_database := dataBaseName + "(data  INTEGER  PRIMARY KEY, open VARCHAR(40),hight VARCHAR(40), low VARCHAR(40), close VARCHAR(40))ENGINE=INNODB"
 		_, err = db.Exec("create table if not exists " + stock_database)
 		if err != nil {
 			fmt.Println(err)

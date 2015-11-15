@@ -19,8 +19,9 @@ func (e Error) Error() string {
 }
 
 type stockInfo struct {
-	name string
-	url  string
+	name    string
+	url     string
+	address int // 0 深圳 1 上海
 }
 
 type StockMgr struct {
@@ -66,7 +67,7 @@ func (mgr *StockMgr) updateMainDatabase() error {
 	defer iMainData.Close()
 	count := iMainData.GetStockCount()
 	fmt.Println(count)
-	err = mgr.loadStockMap()
+	err = mgr.loadStockMap() //要把数据库中的数据导到stocks中
 	if err != nil {
 		return err
 	}
@@ -79,15 +80,17 @@ func (mgr *StockMgr) updateMainDatabase() error {
 		//建立本地库
 		codes := make([]string, len(mgr.stocks))
 		names := make([]string, len(mgr.stocks))
+		address := make([]int, len(mgr.stocks))
 		i := 0
 		for key, info := range mgr.stocks {
 			codes[i] = key
 			names[i] = info.name
+			address[i] = info.address
 			if len(codes[i]) != 0 && len(info.name) != 0 {
 				i++
 			}
 		}
-		err = iMainData.InsertMainData(codes, names)
+		err = iMainData.InsertMainData(codes[:i], names[:i], address[:i])
 		if err != nil {
 			return err
 		}
@@ -106,6 +109,13 @@ func (mgr *StockMgr) updateMainDatabase() error {
 
 func (mgr *StockMgr) updateStockSpecificDatabase() error {
 	dataMgr := common.Instance()
+	iMainData, err := dataMgr.GetIMainData()
+	if err != nil {
+		fmt.Println("local haven't main table")
+		return err
+	}
+	defer iMainData.Close()
+
 	count := 0
 	for key, _ := range mgr.stocks {
 		idata, err := dataMgr.GetIData(key)
@@ -115,8 +125,24 @@ func (mgr *StockMgr) updateStockSpecificDatabase() error {
 		}
 		idata.Close()
 
+		count := idata.GetInfoCount()
+		//小于一个月则需要去下载
+		if count < 30 {
+			var address string
+			if mgr.stocks[key].address == 0 {
+				address = "sz"
+			} else {
+				address = "ss"
+			}
+			url := "http://table.finance.yahoo.com/table.csv?s=" + key + "." + address
+			dwMgr := download.Instance()
+			_, err := dwMgr.Download(url)
+			if err != nil {
+				return err
+			}
+		}
 	}
-	fmt.Println("the %d stock open error", count)
+
 	return nil
 }
 
@@ -245,8 +271,10 @@ func (mgr *StockMgr) getStockMapByParseFile(localPath string) (stockMap map[stri
 
 	stockMap = make(map[string]stockInfo)
 	for key, info := range shanghaiStocks {
+		info.address = 1
 		stockMap[key] = info
 	}
+	//充分利用深圳股票的枚举是0
 	for key, info := range shenZhenStocks {
 		stockMap[key] = info
 	}
@@ -284,7 +312,7 @@ func (mgr *StockMgr) parseRemoteStockMapByUL(stocksText string) (stockMap map[st
 			return Error("parse remote li error")
 		}
 
-		stockMap[stockid] = stockInfo{name, url}
+		stockMap[stockid] = stockInfo{name, url, 0}
 		return err
 	}
 
