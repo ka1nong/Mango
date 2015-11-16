@@ -123,7 +123,7 @@ func (mgr *StockMgr) updateStockSpecificDatabase() error {
 			count++
 			continue
 		}
-		idata.Close()
+		defer idata.Close()
 
 		count := idata.GetInfoCount()
 		//小于一个月则需要去下载
@@ -136,10 +136,12 @@ func (mgr *StockMgr) updateStockSpecificDatabase() error {
 			}
 			url := "http://table.finance.yahoo.com/table.csv?s=" + key + "." + address
 			dwMgr := download.Instance()
-			_, err := dwMgr.Download(url)
+			localPath, err := dwMgr.Download(url)
 			if err != nil {
 				return err
 			}
+			err = mgr.getStockInfoByParseFile(localPath)
+			//idata.InsertData()
 		}
 	}
 
@@ -220,6 +222,24 @@ func (mgr *StockMgr) loadStockMap() error {
 	err = mgr.saveLocalStockMap()
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+func (mgr *StockMgr) getStockInfoByParseFile(localPath string) error {
+	buf, err := ioutil.ReadFile(localPath)
+	if err != nil {
+		return Error("read stock info error")
+	}
+	stockInfoText := string(buf)
+	strInfos := strings.Split(stockInfoText, "\n")
+	if len(strInfos) < 2 {
+		return Error("parse stock info error")
+	}
+
+	for i := 1; i < len(strInfos); i++ {
+		_ = strings.Split(strInfos[i], ",")
+
 	}
 	return nil
 }
