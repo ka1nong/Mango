@@ -1,7 +1,7 @@
 /*
 建立数据库的股票管理模块，是程序在一个新地方运行的基础
 */
-package stockmanger
+package common
 
 import "download"
 import "fmt"
@@ -10,7 +10,6 @@ import "strings"
 import "mahonia"
 import "os"
 import "strconv"
-import "common"
 
 type Error string
 
@@ -24,24 +23,35 @@ type stockInfo struct {
 	address int // 0 深圳 1 上海
 }
 
-type StockMgr struct {
+type stockMgr struct {
 	stockMapUrl string
 	stockUrl    string
 	stocks      map[string]stockInfo
 }
 
-var instance *StockMgr
+/*var instance *stockMgr
 
-func Instance() *StockMgr {
+func Instance() *stockMgr {
 	if instance == nil {
-		instance = new(StockMgr)
+		instance = new(stockMgr)
 		instance.stockMapUrl = "http://quote.eastmoney.com/stocklist.html#sz" //http://quote.eastmoney.com/stocklist.html"
 		instance.stockUrl = "http://hq.sinajs.cn/list="
 	}
 	return instance
 }
+*/
+func newStockMgr() *stockMgr {
+	mgr := &stockMgr{}
+	mgr.stockMapUrl = "http://quote.eastmoney.com/stocklist.html#sz" //http://quote.eastmoney.com/stocklist.html"
+	mgr.stockUrl = "http://hq.sinajs.cn/list="
+	return mgr
+}
 
-func (mgr *StockMgr) Start() error {
+func (mgr *stockMgr) updateMain() error {
+	return nil
+}
+
+func (mgr *stockMgr) Start() error {
 	fmt.Println("stock manger start run")
 	err := mgr.updateMainDatabase()
 	if err != nil {
@@ -57,9 +67,9 @@ func (mgr *StockMgr) Start() error {
 	return nil
 }
 
-func (mgr *StockMgr) updateMainDatabase() error {
-	dataMgr := common.Instance()
-	iMainData, err := dataMgr.GetIMainData()
+func (mgr *stockMgr) updateMainDatabase() error {
+	//	dataMgr := dataMgrInstance()
+	iMainData, err := GetIMainData()
 	if err != nil {
 		fmt.Println("local haven't main table")
 		return err
@@ -90,7 +100,7 @@ func (mgr *StockMgr) updateMainDatabase() error {
 				i++
 			}
 		}
-		err = iMainData.InsertMainData(codes[:i], names[:i], address[:i])
+		//err = iMainData.InsertMainData(codes[:i], names[:i], address[:i])
 		if err != nil {
 			return err
 		}
@@ -107,9 +117,9 @@ func (mgr *StockMgr) updateMainDatabase() error {
 	return nil
 }
 
-func (mgr *StockMgr) updateStockSpecificDatabase() error {
-	dataMgr := common.Instance()
-	iMainData, err := dataMgr.GetIMainData()
+func (mgr *stockMgr) updateStockSpecificDatabase() error {
+	//	dataMgr := dataMgrInstance()
+	iMainData, err := GetIMainData()
 	if err != nil {
 		fmt.Println("local haven't main table")
 		return err
@@ -118,7 +128,7 @@ func (mgr *StockMgr) updateStockSpecificDatabase() error {
 
 	count := 0
 	for key, _ := range mgr.stocks {
-		idata, err := dataMgr.GetIData(key)
+		idata, err := GetIData(key)
 		if err != nil {
 			count++
 			continue
@@ -148,7 +158,7 @@ func (mgr *StockMgr) updateStockSpecificDatabase() error {
 	return nil
 }
 
-func (mgr *StockMgr) loadSpecificStockInfo(stockCode string) error {
+func (mgr *stockMgr) loadSpecificStockInfo(stockCode string) error {
 	dwMgr := download.Instance()
 	localPath, err := dwMgr.Download(mgr.stockUrl + string("sh") + stockCode)
 	buf, err := ioutil.ReadFile(localPath)
@@ -170,7 +180,7 @@ func (mgr *StockMgr) loadSpecificStockInfo(stockCode string) error {
 	return nil
 }
 
-func (mgr *StockMgr) loadStockMap() error {
+func (mgr *stockMgr) loadStockMap() error {
 	dwMgr := download.Instance()
 	localPath, err := dwMgr.Download(mgr.stockMapUrl)
 	bHasRemoteStockMap := true
@@ -226,7 +236,7 @@ func (mgr *StockMgr) loadStockMap() error {
 	return nil
 }
 
-func (mgr *StockMgr) getStockInfoByParseFile(localPath string) error {
+func (mgr *stockMgr) getStockInfoByParseFile(localPath string) error {
 	buf, err := ioutil.ReadFile(localPath)
 	if err != nil {
 		return Error("read stock info error")
@@ -244,7 +254,7 @@ func (mgr *StockMgr) getStockInfoByParseFile(localPath string) error {
 	return nil
 }
 
-func (mgr *StockMgr) getStockMapByParseFile(localPath string) (stockMap map[string]stockInfo, err error) {
+func (mgr *stockMgr) getStockMapByParseFile(localPath string) (stockMap map[string]stockInfo, err error) {
 	buf, err := ioutil.ReadFile(localPath)
 	if err != nil {
 		return stockMap, Error("read remote stock map error")
@@ -301,7 +311,7 @@ func (mgr *StockMgr) getStockMapByParseFile(localPath string) (stockMap map[stri
 	return stockMap, err
 }
 
-func (mgr *StockMgr) parseRemoteStockMapByUL(stocksText string) (stockMap map[string]stockInfo, err error) {
+func (mgr *stockMgr) parseRemoteStockMapByUL(stocksText string) (stockMap map[string]stockInfo, err error) {
 
 	stockMap = make(map[string]stockInfo)
 
@@ -353,13 +363,13 @@ func (mgr *StockMgr) parseRemoteStockMapByUL(stocksText string) (stockMap map[st
 
 }
 
-func (mgr *StockMgr) loadLocalStockMap() (stockMap map[string]stockInfo, err error) {
+func (mgr *stockMgr) loadLocalStockMap() (stockMap map[string]stockInfo, err error) {
 	//暂时还不实现本地化存储
 
 	return stockMap, Error("unknown eror")
 }
 
-func (mgr *StockMgr) saveLocalStockMap() error {
+func (mgr *stockMgr) saveLocalStockMap() error {
 	stocksPath := "../stocksPath.txt"
 	if _, err := os.Stat(stocksPath); err == nil {
 		os.Remove(stocksPath)

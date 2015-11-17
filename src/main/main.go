@@ -1,7 +1,6 @@
 package main
 
 import "fmt"
-import "stockmanger"
 import "bufio"
 import "strconv"
 import "os"
@@ -27,8 +26,6 @@ func main() {
 		case 0:
 			return
 		case 1:
-			stockmgr := stockmanger.Instance()
-			go stockmgr.Start()
 
 		default:
 			fmt.Println("chose error!")
