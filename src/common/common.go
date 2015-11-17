@@ -17,7 +17,6 @@ const (
 )
 
 type dataMgr struct {
-	m_stockMgr *stockMgr
 }
 
 var instance *dataMgr
@@ -25,7 +24,6 @@ var instance *dataMgr
 func dataMgrInstance() *dataMgr {
 	if instance == nil {
 		instance = new(dataMgr)
-		instance.m_stockMgr = newStockMgr()
 	}
 	return instance
 }
@@ -55,6 +53,7 @@ func (mgr *dataMgr) open(dataBaseName string) (data IData, err error) {
 		return nil, err
 	}
 
+	cdata := new(cData)
 	if strings.EqualFold(dataBaseName, MAIN_TABLE) {
 		//主表如果不存在则创建
 		stock_database := MAIN_TABLE + "(code VARCHAR(40)  PRIMARY KEY ,name VARCHAR(40) NOT NULL, address INTEGER)"
@@ -64,7 +63,9 @@ func (mgr *dataMgr) open(dataBaseName string) (data IData, err error) {
 			db.Close()
 			return nil, err
 		}
-		err = mgr.m_stockMgr.updateMain()
+		cdata.db = db
+		stockMgr := getStockMgr()
+		err = stockMgr.updateMain(cdata)
 		if err != nil {
 			fmt.Println(err)
 			db.Close()
@@ -89,10 +90,8 @@ func (mgr *dataMgr) open(dataBaseName string) (data IData, err error) {
 			db.Close()
 			return nil, err
 		}
+		cdata.db = db
+		cdata.stock_name = dataBaseName
 	}
-
-	cdata := new(cData)
-	cdata.db = db
-	cdata.stock_name = dataBaseName
 	return IData(cdata), err
 }

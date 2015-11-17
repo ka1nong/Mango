@@ -10,9 +10,9 @@ type cData struct {
 }
 
 //idata func-----------------------
-func (data *cData) GetData(infos[] string,count int) (datas map[int] map[string] string,err  error) {
+func (data *cData) GetData(infos []string, count int) (datas []map[string]string, err error) {
 	if count == 0 || len(infos) == 0 {
-		return 
+		return
 	}
 	return nil, Error("param error")
 }
@@ -110,6 +110,10 @@ func (data *cData) InsertMainData(codes, names []string, address []int) error {
 		}
 	}
 	return nil
+}
+
+func (data *cData) GetRandomMainData() (stock map[string]string, err error) {
+	return nil, err
 }
 
 //------------------------------------end---------------------------------------
