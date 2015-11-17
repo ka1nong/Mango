@@ -10,20 +10,16 @@ type cData struct {
 }
 
 //idata func-----------------------
-func (data *cData) GetData(count int) {
+func (data *cData) GetData(infos[] string,count int) (datas map[int] map[string] string,err  error) {
+	if count == 0 || len(infos) == 0 {
+		return 
+	}
+	return nil, Error("param error")
 }
 
 func (data *cData) Close() {
 	data.db.Close()
 }
-
-const (
-	DATE  = "date"
-	OPEN  = "open"
-	HIGHT = "hight"
-	CLOSE = "close"
-	LOW   = "low"
-)
 
 func (data *cData) InsertData(info map[string]interface{}) error {
 	//时间，开盘、最高、收盘、最低,
