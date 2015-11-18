@@ -6,6 +6,7 @@ package common
 import "fmt"
 import "sync"
 import "time"
+import "strings"
 
 type Error string
 
@@ -74,9 +75,25 @@ func (mgr *stockMgr) updateMainDatabase(cdata *cData) error {
 				i++
 			}
 		}
-		err = cdata.InsertMainData(codes[:i], names[:i], address[:i])
+		err = mgr.InsertMainData(cdata, codes[:i], names[:i], address[:i])
 		if err != nil {
 			return err
+		}
+	}
+	return nil
+}
+
+func (mgr *stockMgr) InsertMainData(cdata *cData, codes, names []string, address []int) error {
+	stmt, err := cdata.db.Prepare("INSERT INTO " + MAIN_TABLE + "(code, name, address) VALUES(?, ?, ?)")
+	defer stmt.Close()
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	for i := 0; i < len(codes); i++ {
+		_, err = stmt.Exec(codes[i], names[i], address[i])
+		if err != nil {
+			continue
 		}
 	}
 	return nil
@@ -103,9 +120,37 @@ func (mgr *stockMgr) stockUnLock(stock string) {
 	mgr.mutex.Unlock()
 }
 
-func (mgr *stockMgr) GetStockData(cdata *cData, stock string, infos []string, count int) (datas []map[string]string, err error) {
-	mgr.waitStockLock(stock)
+func (mgr *stockMgr) GetStockData(cdata *cData, infos []string, count int) (datas []map[string]string, err error) {
+	mgr.waitStockLock(cdata.stock_name)
+	//检查需要什么，要更新哪些信息
+	for _, info := range infos {
+		if strings.EqualFold(info, DATE) || strings.EqualFold(info, HIGHT) || strings.EqualFold(info, LOW) || strings.EqualFold(info, OPEN) || strings.EqualFold(info, CLOSE) {
+			mgr.updateStockInfosFromYahoo(cdata)
+		}
+	}
 
-	mgr.stockUnLock(stock)
+	//get
+	mgr.stockUnLock(cdata.stock_name)
 	return nil, nil
+}
+
+func (mgr *stockMgr) updateStockInfosFromYahoo(cdata *cData) {
+
+}
+
+func (mgr *stockMgr) GetInfoCount(cdata *cData) int {
+	rows, err := cdata.db.Query("select count(*) from " + cdata.stock_name)
+	if err != nil {
+		fmt.Println(err)
+		return 0
+	}
+	var id int
+	for rows.Next() {
+		err := rows.Scan(&id)
+		if err != nil {
+			fmt.Println(err)
+			return 0
+		}
+	}
+	return id
 }

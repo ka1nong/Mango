@@ -28,18 +28,6 @@ func dataMgrInstance() *dataMgr {
 	return instance
 }
 
-func GetIData(dataName string) (data IData, err error) {
-	mgr := dataMgrInstance()
-	data, err = mgr.open(dataName)
-	return data, err
-}
-
-func GetIMainData() (mainData IMainData, err error) {
-	data, err := GetIData(MAIN_TABLE)
-	mainData = data.(IMainData) //强转，可能会导致运行失败，如果类型不兼容
-	return mainData, err
-}
-
 func (mgr *dataMgr) open(dataBaseName string) (data IData, err error) {
 	db, err := sql.Open("mysql", USER+":"+PASSWORD+"@/stock_data")
 	if err != nil {

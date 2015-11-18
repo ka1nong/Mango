@@ -61,20 +61,8 @@ func (data *cData) InsertData(info map[string]interface{}) error {
 }
 
 func (data *cData) GetInfoCount() int {
-	rows, err := data.db.Query("select count(*) from " + data.stock_name)
-	if err != nil {
-		fmt.Println(err)
-		return 0
-	}
-	var id int
-	for rows.Next() {
-		err := rows.Scan(&id)
-		if err != nil {
-			fmt.Println(err)
-			return 0
-		}
-	}
-	return id
+	mgr := getStockMgr()
+	return mgr.GetInfoCount(data)
 }
 
 //-----------------------end----------------------------------
@@ -94,22 +82,6 @@ func (data *cData) GetStockCount() int {
 		}
 	}
 	return id
-}
-
-func (data *cData) InsertMainData(codes, names []string, address []int) error {
-	stmt, err := data.db.Prepare("INSERT INTO " + MAIN_TABLE + "(code, name, address) VALUES(?, ?, ?)")
-	defer stmt.Close()
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-	for i := 0; i < len(codes); i++ {
-		_, err = stmt.Exec(codes[i], names[i], address[i])
-		if err != nil {
-			continue
-		}
-	}
-	return nil
 }
 
 func (data *cData) GetRandomMainData() (stock map[string]string, err error) {
