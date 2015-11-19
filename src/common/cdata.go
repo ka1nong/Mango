@@ -23,7 +23,7 @@ func (data *cData) Close() {
 
 func (data *cData) InsertData(info map[string]interface{}) error {
 	//时间，开盘、最高、收盘、最低,
-	date := info[DATE].(int)
+	date := info[STOCKINFO_DATE].(int)
 	if date == 0 {
 		return Error("insert fmt error")
 	}

@@ -7,12 +7,14 @@ import "fmt"
 import "sync"
 import "time"
 import "strings"
+import _ "github.com/go-sql-driver/mysql"
+import "database/sql"
 
-type Error string
-
-func (e Error) Error() string {
-	return string(e)
-}
+const (
+	USER       = "huangchen"
+	PASSWORD   = "199212"
+	MAIN_TABLE = "stockList"
+)
 
 type stockInfo struct {
 	name    string
@@ -23,7 +25,7 @@ type stockInfo struct {
 type stockMgr struct {
 	stockMapUrl string
 	stockUrl    string
-	updateMap   map[string]bool
+	updateMap   map[string]int
 	mutex       sync.Mutex
 }
 
@@ -34,53 +36,67 @@ func getStockMgr() *stockMgr {
 		s_stockMgr = new(stockMgr)
 		s_stockMgr.stockMapUrl = "http://quote.eastmoney.com/stocklist.html#sz" //http://quote.eastmoney.com/stocklist.html"
 		s_stockMgr.stockUrl = "http://hq.sinajs.cn/list="
+		s_stockMgr.initFromLocalFiles()
 	}
 	var once sync.Once
 	once.Do(init)
 	return s_stockMgr
 }
 
-func (mgr *stockMgr) updateMain(cdata *cData) error {
-	initMainStocks := func() {
-		fmt.Println("update main")
-		err := mgr.updateMainDatabase(cdata)
-		if err != nil {
-			fmt.Print("update main  error:")
-			fmt.Println(err)
-		}
+func (mgr *stockMgr) open(dataBaseName string) (data cData, err error) {
+	db, err := sql.Open("mysql", USER+":"+PASSWORD+"@/stock_data")
+	if err != nil {
+		fmt.Println("database initialize error : ", err.Error())
+		return nil, err
 	}
-	var once sync.Once
-	once.Do(initMainStocks)
-	return nil
-}
+	err = db.Ping()
+	if err != nil {
+		fmt.Println("database initialize error : ", err.Error())
+		db.Close()
+		return nil, err
+	}
 
-func (mgr *stockMgr) updateMainDatabase(cdata *cData) error {
-	count := cdata.GetStockCount()
-	fmt.Println("main stock count is:%d", count)
-	if count == 0 {
-		stocks, err := mgr.loadStockMap()
+	cdata := new(cData)
+	if strings.EqualFold(dataBaseName, MAIN_TABLE) {
+		//主表如果不存在则创建
+		stock_database := MAIN_TABLE + "(code VARCHAR(40)  PRIMARY KEY ,name VARCHAR(40) NOT NULL, address INTEGER)"
+		_, err := db.Exec("create table if not exists " + stock_database)
 		if err != nil {
-			return err
+			fmt.Println(err)
+			db.Close()
+			return nil, err
 		}
-		//建立本地库
-		codes := make([]string, len(stocks))
-		names := make([]string, len(stocks))
-		address := make([]int, len(stocks))
-		i := 0
-		for key, info := range stocks {
-			codes[i] = key
-			names[i] = info.name
-			address[i] = info.address
-			if len(codes[i]) != 0 && len(info.name) != 0 {
-				i++
-			}
-		}
-		err = mgr.InsertMainData(cdata, codes[:i], names[:i], address[:i])
+		cdata.db = db
+		cdata.stock_name = dataBaseName
+		err = mgr.updateMain(cdata)
 		if err != nil {
-			return err
+			fmt.Println(err)
+			db.Close()
+			return nil, err
 		}
+	} else {
+		rows, err := db.Query("select code, name from " + MAIN_TABLE + "  where code = " + dataBaseName)
+		if err != nil {
+			fmt.Print(err)
+			return nil, err
+		}
+		defer rows.Close()
+		//http://table.finance.yahoo.com/table.csv?s=000001.sz
+		//表名不能用纯数字，我加上stock
+		//create table 时间，开盘、最高、收盘、最低,
+		//社会需要的是熟工，而不是你的学习能力
+		dataBaseName = dataBaseName + "stock"
+		stock_database := dataBaseName + "(data  INTEGER  PRIMARY KEY, open VARCHAR(40),hight VARCHAR(40), low VARCHAR(40), close VARCHAR(40))ENGINE=INNODB"
+		_, err = db.Exec("create table if not exists " + stock_database)
+		if err != nil {
+			fmt.Println(err)
+			db.Close()
+			return nil, err
+		}
+		cdata.db = db
+		cdata.stock_name = dataBaseName
 	}
-	return nil
+	return cdata, err
 }
 
 func (mgr *stockMgr) InsertMainData(cdata *cData, codes, names []string, address []int) error {
@@ -99,38 +115,57 @@ func (mgr *stockMgr) InsertMainData(cdata *cData, codes, names []string, address
 	return nil
 }
 
-func (mgr *stockMgr) waitStockLock(stock string) {
+func (mgr *stockMgr) stockLock(stock string, isWrite bool) {
 label:
 	mgr.mutex.Lock()
-	value, ok := mgr.updateMap[stock]
-	if ok && value {
-		mgr.mutex.Unlock()
-		//锁住则继续等待1秒钟
-		time.Sleep(1e9)
-		goto label
+	_, ok := mgr.updateMap[stock]
+	if ok {
+		if mgr.updateMap[stock] == -1 {
+			mgr.mutex.Unlock()
+			//锁住则继续等待1秒钟
+			time.Sleep(1e9)
+			goto label
+		}
+		if isWrite {
+			if mgr.updateMap[stock] != 0 {
+				//锁住则继续等待1秒钟
+				time.Sleep(1e9)
+				goto label
+			} else {
+				mgr.updateMap[stock] = -1
+			}
+		} else {
+			mgr.updateMap[stock]++
+		}
+
+	} else {
+		if isWrite {
+			mgr.updateMap[stock] = -1
+		} else {
+			mgr.updateMap[stock]++
+		}
 	}
-	//没锁住则现在锁住
-	mgr.updateMap[stock] = true
 	mgr.mutex.Unlock()
 }
 
 func (mgr *stockMgr) stockUnLock(stock string) {
 	mgr.mutex.Lock()
-	mgr.updateMap[stock] = false
+	if mgr.updateMap[stock] == -1 {
+		mgr.updateMap[stock] = 0
+	} else {
+		mgr.updateMap[stock]--
+	}
 	mgr.mutex.Unlock()
 }
 
 func (mgr *stockMgr) GetStockData(cdata *cData, infos []string, count int) (datas []map[string]string, err error) {
-	mgr.waitStockLock(cdata.stock_name)
+	mgr.stockLock(cdata.stock_name, true)
+	defer mgr.stockUnLock(cdata.stock_name)
 	//检查需要什么，要更新哪些信息
-	for _, info := range infos {
-		if strings.EqualFold(info, DATE) || strings.EqualFold(info, HIGHT) || strings.EqualFold(info, LOW) || strings.EqualFold(info, OPEN) || strings.EqualFold(info, CLOSE) {
-			mgr.updateStockInfosFromYahoo(cdata)
-		}
+	for _, _ = range infos {
+
 	}
 
-	//get
-	mgr.stockUnLock(cdata.stock_name)
 	return nil, nil
 }
 
@@ -139,6 +174,8 @@ func (mgr *stockMgr) updateStockInfosFromYahoo(cdata *cData) {
 }
 
 func (mgr *stockMgr) GetInfoCount(cdata *cData) int {
+	mgr.stockLock(cdata.stock_name, false)
+	defer mgr.stockUnLock(cdata.stock_name)
 	rows, err := cdata.db.Query("select count(*) from " + cdata.stock_name)
 	if err != nil {
 		fmt.Println(err)

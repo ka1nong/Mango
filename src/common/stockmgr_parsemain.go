@@ -5,6 +5,50 @@ import "fmt"
 import "io/ioutil"
 import "strings"
 import "mahonia"
+import "sync"
+
+func (mgr *stockMgr) updateMain(cdata *cData) error {
+	initMainStocks := func() {
+		fmt.Println("update main")
+		err := mgr.updateMainDatabase(cdata)
+		if err != nil {
+			fmt.Print("update main  error:")
+			fmt.Println(err)
+		}
+	}
+	var once sync.Once
+	once.Do(initMainStocks)
+	return nil
+}
+
+func (mgr *stockMgr) updateMainDatabase(cdata *cData) error {
+	count := cdata.GetStockCount()
+	fmt.Println("main stock count is:%d", count)
+	if count == 0 {
+		stocks, err := mgr.loadStockMap()
+		if err != nil {
+			return err
+		}
+		//建立本地库
+		codes := make([]string, len(stocks))
+		names := make([]string, len(stocks))
+		address := make([]int, len(stocks))
+		i := 0
+		for key, info := range stocks {
+			codes[i] = key
+			names[i] = info.name
+			address[i] = info.address
+			if len(codes[i]) != 0 && len(info.name) != 0 {
+				i++
+			}
+		}
+		err = mgr.InsertMainData(cdata, codes[:i], names[:i], address[:i])
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
 func (mgr *stockMgr) loadStockMap() (map[string]stockInfo, error) {
 	dwMgr := download.Instance()

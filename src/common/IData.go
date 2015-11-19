@@ -1,13 +1,5 @@
 package common
 
-const (
-	DATE  = "date"
-	OPEN  = "open"
-	HIGHT = "hight"
-	CLOSE = "close"
-	LOW   = "low"
-)
-
 type IData interface {
 	Close()
 	GetInfoCount() int
@@ -21,13 +13,13 @@ type IMainData interface {
 }
 
 func GetIData(dataName string) (data IData, err error) {
-	mgr := dataMgrInstance()
-	data, err = mgr.open(dataName)
-	return data, err
+	mgr := getStockMgr()
+	cdata, err := mgr.open(dataName)
+	return cdata.(IData), err
 }
 
 func GetIMainData() (mainData IMainData, err error) {
-	data, err := GetIData(MAIN_TABLE)
-	mainData = data.(IMainData)
+	cdata, err := GetIData(MAIN_TABLE)
+	mainData = cdata.(IMainData)
 	return mainData, err
 }
