@@ -25,6 +25,10 @@ func (mgr *stockMgr) updateMainDatabase(cdata *cData) error {
 	count := cdata.GetStockCount()
 	fmt.Println("main stock count is:%d", count)
 	if count == 0 {
+		err := mgr.loadStockFromLocalFiles()
+		if err == nil {
+			return nil
+		}
 		stocks, err := mgr.loadStockMap()
 		if err != nil {
 			return err

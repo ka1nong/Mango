@@ -25,16 +25,22 @@ func WalkDir(dirPth, suffix string) (files []string, err error) {
 }
 
 func (mgr *stockMgr) parseFileFromCSV(v string) (infos []map[string]string, err error) {
+	cdata, err := mgr.open(MAIN_TABLE)
+	if err != nil {
+		return nil, err
+	}
+	defer cdata.Close()
+
 	return nil, err
 }
 
-func (mgr *stockMgr) initFromLocalFiles() {
+func (mgr *stockMgr) loadStockFromLocalFiles() error {
 	files, err := WalkDir("../stocks", ".csv")
 	if err != nil {
-		return
+		return err
 	}
-	cdata, err := mgr.open(MAIN_TABLE)
 	for _, v := range files {
 		mgr.parseFileFromCSV(v)
 	}
+	return nil
 }

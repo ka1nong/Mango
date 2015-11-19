@@ -25,6 +25,7 @@ func Instance() *DownloadMgr {
 	return instance
 }
 
+//todo:add lock
 func (mgr *DownloadMgr) Download(url string) (localPath string, err error) {
 	resp, err := http.Get(url)
 	if err != nil {

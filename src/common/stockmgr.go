@@ -36,14 +36,13 @@ func getStockMgr() *stockMgr {
 		s_stockMgr = new(stockMgr)
 		s_stockMgr.stockMapUrl = "http://quote.eastmoney.com/stocklist.html#sz" //http://quote.eastmoney.com/stocklist.html"
 		s_stockMgr.stockUrl = "http://hq.sinajs.cn/list="
-		s_stockMgr.initFromLocalFiles()
 	}
 	var once sync.Once
 	once.Do(init)
 	return s_stockMgr
 }
 
-func (mgr *stockMgr) open(dataBaseName string) (data cData, err error) {
+func (mgr *stockMgr) open(dataBaseName string) (data *cData, err error) {
 	db, err := sql.Open("mysql", USER+":"+PASSWORD+"@/stock_data")
 	if err != nil {
 		fmt.Println("database initialize error : ", err.Error())
@@ -69,6 +68,12 @@ func (mgr *stockMgr) open(dataBaseName string) (data cData, err error) {
 		cdata.db = db
 		cdata.stock_name = dataBaseName
 		err = mgr.updateMain(cdata)
+		if err != nil {
+			fmt.Println(err)
+			db.Close()
+			return nil, err
+		}
+		err = startRealTimeUpdate()
 		if err != nil {
 			fmt.Println(err)
 			db.Close()
@@ -169,10 +174,6 @@ func (mgr *stockMgr) GetStockData(cdata *cData, infos []string, count int) (data
 	return nil, nil
 }
 
-func (mgr *stockMgr) updateStockInfosFromYahoo(cdata *cData) {
-
-}
-
 func (mgr *stockMgr) GetInfoCount(cdata *cData) int {
 	mgr.stockLock(cdata.stock_name, false)
 	defer mgr.stockUnLock(cdata.stock_name)
@@ -190,4 +191,63 @@ func (mgr *stockMgr) GetInfoCount(cdata *cData) int {
 		}
 	}
 	return id
+}
+
+func (mgr *stockMgr) GetStockCount(cdata *cData) int {
+	mgr.stockLock(cdata.stock_name, false)
+	defer mgr.stockUnLock(cdata.stock_name)
+
+	rows, err := cdata.db.Query("select count(*) from " + MAIN_TABLE)
+	if err != nil {
+		fmt.Println(err)
+		return 0
+	}
+	var id int
+	for rows.Next() {
+		err := rows.Scan(&id)
+		if err != nil {
+			fmt.Println(err)
+			return 0
+		}
+	}
+	return id
+}
+
+func (mgr *stockMgr) InsertData(cdata *cData, info map[string]interface{}) error {
+	//时间，开盘、最高、收盘、最低,
+	/*date := info[STOCKINFO_DATE].(int)
+	if date == 0 {
+		return Error("insert fmt error")
+	}
+	rows, err := data.db.Query("select * from "+data.stock_name+" where date = ?", date)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+		tx, _ := data.db.Begin()
+		//IF (SELECT * FROM ipstats WHERE date='192.168.0.1)' {
+		//	    UPDATE ipstats SET clicks=clicks+1 WHERE ip='192.168.0.1';
+		//	} else {
+		//		 INSERT INTO ipstats (ip, clicks) VALUES ('192.168.0.1', 1);
+		//}
+		stmt, err := data.db.Prepare("INSERT INTO " + data.stock_name + "(date, open, hight, close, low) VALUES(?, ?, ?,?, ?)")
+		if err != nil {
+			fmt.Println(err)
+			tx.Rollback()
+			return err
+		}
+		defer stmt.Close()
+		//for i := 0; i < len(date); i++ {
+		//	_, err = stmt.Exec(date[i], open[i], hight[i], close[i], low[i])
+		if err != nil {
+			fmt.Println(err)
+			tx.Rollback()
+			return err
+		}
+		//}
+		err = tx.Commit() //err := Tx.Rollback()
+		return nil
+	*/
+	return nil
 }

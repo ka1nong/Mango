@@ -15,7 +15,8 @@ type IMainData interface {
 func GetIData(dataName string) (data IData, err error) {
 	mgr := getStockMgr()
 	cdata, err := mgr.open(dataName)
-	return cdata.(IData), err
+	data = cdata
+	return data, err
 }
 
 func GetIMainData() (mainData IMainData, err error) {
