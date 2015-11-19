@@ -166,11 +166,18 @@ func (mgr *stockMgr) stockUnLock(stock string) {
 func (mgr *stockMgr) GetStockData(cdata *cData, infos []string, count int) (datas []map[string]string, err error) {
 	mgr.stockLock(cdata.stock_name, true)
 	defer mgr.stockUnLock(cdata.stock_name)
-	//检查需要什么，要更新哪些信息
-	for _, _ = range infos {
-
+	isNeed, err := isNeedSupplement(cdata, 123)
+	if err != nil {
+		return nil, err
 	}
-
+	if isNeed {
+		su := Newsupplement()
+		err = su.start()
+		if err != nil {
+			return nil, err
+		}
+	}
+	//获取数据
 	return nil, nil
 }
 
