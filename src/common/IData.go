@@ -1,5 +1,7 @@
 package common
 
+import "strconv"
+
 type IData interface {
 	Close()
 	GetInfoCount() int
@@ -9,8 +11,8 @@ type IData interface {
 type IMainData interface {
 	Close()
 	GetStockCount() int
-	GetRandomMainData() (stock map[string]string, err error) //伪随机
-	GetAllStockInfo() (stocks []map[string]string, err error)
+	GetRandomMainData() (stock map[string]interface{}, err error) //伪随机
+	GetAllStockInfo() (stocks []map[string]interface{}, err error)
 }
 
 type IStorage interface {
@@ -20,16 +22,20 @@ type IStorage interface {
 	InsertData(keyName string, key interface{}, valueName string, value interface{}) error
 }
 
-func GetIData(dataName string) (data IData, err error) {
+func GetIData(code int) (data IData, err error) {
 	mgr := getStockMgr()
-	cdata, err := mgr.open(dataName)
+	cdata, err := mgr.open(strconv.Itoa(code))
 	data = cdata
 	return data, err
 }
 
 func GetIMainData() (mainData IMainData, err error) {
-	cdata, err := GetIData(MAIN_TABLE)
-	mainData = cdata.(IMainData)
+	mgr := getStockMgr()
+	cdata, err := mgr.open(MAIN_TABLE)
+	if err != nil {
+		return nil, err
+	}
+	mainData = cdata
 	return mainData, err
 }
 

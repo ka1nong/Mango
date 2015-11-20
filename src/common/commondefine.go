@@ -26,3 +26,9 @@ const (
 	STOCKINFO_PC_TTM              = "PC_TTM"
 	STOCKINFO_PB                  = "PB"
 )
+
+const (
+	STOCK_CODE    = "code"
+	STOCK_NAME    = "name"
+	STOCK_ADDRESS = "address"
+)

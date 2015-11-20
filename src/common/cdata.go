@@ -35,7 +35,7 @@ func (data *cData) GetStockCount() int {
 	return mgr.GetStockCount(data)
 }
 
-func (data *cData) GetRandomMainData() (stock map[string]string, err error) {
+func (data *cData) GetRandomMainData() (stock map[string]interface{}, err error) {
 	count := data.GetStockCount()
 	if count != 0 {
 	}
@@ -43,7 +43,7 @@ func (data *cData) GetRandomMainData() (stock map[string]string, err error) {
 }
 
 //todo:这个函数消耗内存，要做缓存
-func (data *cData) GetAllStockInfo() (stocks []map[string]string, err error) {
+func (data *cData) GetAllStockInfo() (stocks []map[string]interface{}, err error) {
 	return nil, err
 }
 
