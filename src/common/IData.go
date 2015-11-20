@@ -5,7 +5,7 @@ import "strconv"
 type IData interface {
 	Close()
 	GetInfoCount() int
-	GetData(infos []string, beingDate string, endData string, density int) (datas []map[string]string, err error)
+	GetData(infos []string, beingDate int64, endData int64, density string) (datas []map[string]interface{}, err error)
 }
 
 type IMainData interface {
