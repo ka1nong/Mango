@@ -1,16 +1,15 @@
-package  peakanalysis
+package peakanalysis
 
-import  "common"
+import "common"
+
 type PeakAnalysis struct {
-		
 }
 
-
-func (analysis * PeakAnalysis) Start() error {
+func (analysis *PeakAnalysis) Start() error {
 	iMainData, err := common.GetIMainData()
 	if err != nil {
-		return  err
+		return err
 	}
 	defer iMainData.Close()
-	return nil 
+	return nil
 }
