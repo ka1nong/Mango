@@ -4,6 +4,7 @@ import "fmt"
 import "bufio"
 import "strconv"
 import "os"
+import "historyStock"
 
 func main() {
 
@@ -27,7 +28,7 @@ func main() {
 			return
 		case 1:
 
-			break;
+			break
 		default:
 			fmt.Println("chose error!")
 
