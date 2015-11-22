@@ -8,6 +8,7 @@ import "historyStock/data"
 
 func main() {
 
+	a := true
 	for {
 		fmt.Println("//------------------")
 		fmt.Println("//1.load historyStock------")
@@ -23,6 +24,10 @@ func main() {
 			fmt.Println(err)
 			return
 		}
+		if a == false {
+			return 
+		}
+		a = false
 		switch chose {
 		case 0:
 			return
