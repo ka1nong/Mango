@@ -81,6 +81,19 @@ func parseFileFromCSV(stocksText string, filename string) error {
 	stockInfos := strings.Split(stocksText, "\n")
 	stockInfos = stockInfos[1:]
 
+	errHandle := func(param *float64, str string) error {
+		v, err := strconv.Atoi(str)
+		if err != nil {
+			fmt.Print(err)
+			fmt.Print(" ")
+			fmt.Print(*param)
+			fmt.Print("  ")
+			fmt.Println(filename)
+			return err
+		}
+		*param = float64(v)
+		return nil
+	}
 	for _, v := range stockInfos {
 		infos := strings.Split(v, ",")
 		if len(infos) != 19 {
@@ -89,138 +102,110 @@ func parseFileFromCSV(stocksText string, filename string) error {
 		param1 := infos[1]
 		param2, err := strconv.ParseFloat(infos[2], 64)
 		if err != nil {
-			v, err = strconv.Atoi(infos[2)
+			err = errHandle(&param2, infos[2])
 			if err != nil {
-			fmt.Print(err)
-			fmt.Print(" ")
-			fmt.Print(param3)
-			fmt.Print("  ")
-			fmt.Println(filename)
-			continue
+				continue
 			}
-			param2 = (float64)v
 		}
 		param3, err := strconv.ParseFloat(infos[3], 64)
 		if err != nil {
+			err = errHandle(&param3, infos[3])
+			if err != nil {
+				continue
+			}
 		}
 		param4, err := strconv.ParseFloat(infos[4], 64)
 		if err != nil {
-			fmt.Print(err)
-			fmt.Print(" ")
-			fmt.Print(param4)
-			fmt.Print("  ")
-			fmt.Println(filename)
-			continue
+			err = errHandle(&param4, infos[4])
+			if err != nil {
+				continue
+			}
 		}
 		param5, err := strconv.ParseFloat(infos[5], 64)
 		if err != nil {
-			fmt.Print(err)
-			fmt.Print(" ")
-			fmt.Print(param5)
-			fmt.Print("  ")
-			fmt.Println(filename)
-			continue
+			err = errHandle(&param5, infos[5])
+			if err != nil {
+				continue
+			}
 		}
 		param6, err := strconv.ParseFloat(infos[6], 64)
 		if err != nil {
-			fmt.Print(err)
-			fmt.Print(" ")
-			fmt.Print(param6)
-			fmt.Print("  ")
-			fmt.Println(filename)
-			continue
+			err = errHandle(&param6, infos[6])
+			if err != nil {
+				continue
+			}
 		}
 		param7, err := strconv.ParseFloat(infos[7], 64)
 		if err != nil {
-			fmt.Print(err)
-			fmt.Print(" ")
-			fmt.Print(param7)
-			fmt.Print("  ")
-			fmt.Println(filename)
-			continue
+			err = errHandle(&param7, infos[7])
+			if err != nil {
+				continue
+			}
 		}
 		param8, err := strconv.ParseFloat(infos[8], 64)
 		if err != nil {
-			fmt.Print(err)
-			fmt.Print(" ")
-			fmt.Print(param8)
-			fmt.Print("  ")
-			fmt.Println(filename)
-			continue
+			err = errHandle(&param8, infos[8])
+			if err != nil {
+				continue
+			}
 		}
 		param9, err := strconv.ParseFloat(infos[9], 64)
 		if err != nil {
-			fmt.Print(err)
-			fmt.Print(" ")
-			fmt.Print(param9)
-			fmt.Print("  ")
-			fmt.Println(filename)
-			continue
+			err = errHandle(&param9, infos[9])
+			if err != nil {
+				continue
+			}
 		}
 		param10, err := strconv.ParseFloat(infos[10], 64)
 		if err != nil {
-			fmt.Print(err)
-			fmt.Print(" ")
-			fmt.Print(param10)
-			fmt.Print("  ")
-			fmt.Println(filename)
-			continue
+			err = errHandle(&param10, infos[10])
+			if err != nil {
+				continue
+			}
 		}
 		param11, err := strconv.ParseFloat(infos[11], 64)
 		if err != nil {
-			fmt.Print(err)
-			fmt.Print(" ")
-			fmt.Print(param11)
-			fmt.Print("  ")
-			fmt.Println(filename)
-			continue
+			err = errHandle(&param11, infos[11])
+			if err != nil {
+				continue
+			}
 		}
 		param12, err := strconv.ParseFloat(infos[12], 64)
 		if err != nil {
-			fmt.Print(err)
-			fmt.Print(" ")
-			fmt.Print(param12)
-			fmt.Print("  ")
-			fmt.Println(filename)
-			continue
+			err = errHandle(&param12, infos[12])
+			if err != nil {
+				continue
+			}
 		}
 		param13 := infos[13]
 		param14 := infos[14]
 		param15, err := strconv.ParseFloat(infos[15], 64)
 		if err != nil {
-			fmt.Print(err)
-			fmt.Print(" ")
-			fmt.Print(param15)
-			fmt.Print("  ")
-			fmt.Println(filename)
-			continue
+			err = errHandle(&param15, infos[15])
+			if err != nil {
+				continue
+			}
 		}
 		param16, err := strconv.ParseFloat(infos[16], 64)
 		if err != nil {
-			fmt.Print(err)
-			fmt.Print(" ")
-			fmt.Print(param16)
-			fmt.Print("  ")
-			fmt.Println(filename)
-			continue
+			err = errHandle(&param16, infos[16])
+			if err != nil {
+				continue
+			}
 		}
 		param17, err := strconv.ParseFloat(infos[17], 64)
 		if err != nil {
-			fmt.Print(err)
-			fmt.Print(" ")
-			fmt.Print(param17)
-			fmt.Print("  ")
-			fmt.Println(filename)
-			continue
+			err = errHandle(&param17, infos[17])
+			if err != nil {
+				continue
+			}
 		}
 		param18, err := strconv.ParseFloat(infos[18], 64)
 		if err != nil {
-			fmt.Print(err)
-			fmt.Print(" ")
-			fmt.Print(param18)
-			fmt.Print("  ")
-			fmt.Println(filename)
-			continue
+			err = errHandle(&param18, infos[18])
+			if err != nil {
+				continue
+			}
 		}
 		_, err = stmt.Exec(param1, param2, param3, param4, param5, param6, param7, param8, param9, param10, param11, param12, param13, param14, param15, param16, param17, param18)
 		if err != nil {
@@ -254,39 +239,73 @@ func parseDapanFileFromCSV(stocksText string, filename string) error {
 	stockInfos := strings.Split(stocksText, "\n")
 	stockInfos = stockInfos[1:]
 
+	errHandle := func(param *float64, str string) error {
+		v, err := strconv.Atoi(str)
+		if err != nil {
+			fmt.Print(err)
+			fmt.Print(" ")
+			fmt.Print(*param)
+			fmt.Print("  ")
+			fmt.Println(filename)
+			return err
+		}
+		*param = float64(v)
+		return nil
+	}
 	for _, v := range stockInfos {
 		infos := strings.Split(v, ",")
-		if len(infos) != 19 {
+		if len(infos) != 9 {
 			return err
 		}
 		param1 := infos[1]
 		param2, err := strconv.ParseFloat(infos[2], 64)
 		if err != nil {
-			return err
+			err = errHandle(&param2, infos[2])
+			if err != nil {
+				continue
+			}
 		}
 		param3, err := strconv.ParseFloat(infos[3], 64)
 		if err != nil {
-			return err
+			err = errHandle(&param3, infos[3])
+			if err != nil {
+				continue
+			}
 		}
 		param4, err := strconv.ParseFloat(infos[4], 64)
 		if err != nil {
-			return err
+			err = errHandle(&param4, infos[4])
+			if err != nil {
+				continue
+			}
 		}
 		param5, err := strconv.ParseFloat(infos[5], 64)
 		if err != nil {
-			return err
+			err = errHandle(&param5, infos[5])
+			if err != nil {
+				continue
+			}
 		}
 		param6, err := strconv.ParseFloat(infos[6], 64)
 		if err != nil {
-			return err
+			err = errHandle(&param6, infos[6])
+			if err != nil {
+				continue
+			}
 		}
 		param7, err := strconv.ParseFloat(infos[7], 64)
 		if err != nil {
-			return err
+			err = errHandle(&param7, infos[7])
+			if err != nil {
+				continue
+			}
 		}
 		param8, err := strconv.ParseFloat(infos[8], 64)
 		if err != nil {
-			return err
+			err = errHandle(&param8, infos[8])
+			if err != nil {
+				continue
+			}
 		}
 
 		_, err = stmt.Exec(param1, param2, param3, param4, param5, param6, param7, param8)
@@ -356,7 +375,7 @@ func parseFiles(stockfiles []string, isDaPan bool) error {
 
 func StartLoadData() error {
 	go func() {
-		stockfiles, err := walkDir("/mnt/stocks/index data", ".csv")
+		stockfiles, err := walkDir("/mnt/index data", ".csv")
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -364,6 +383,7 @@ func StartLoadData() error {
 		if err != nil {
 			fmt.Println(err)
 		}
+		fmt.Println("dapan done")
 	}()
 	go func() {
 		stockfiles, err := walkDir("/mnt/stock data", ".csv")
@@ -374,6 +394,7 @@ func StartLoadData() error {
 		if err != nil {
 			fmt.Println(err)
 		}
+		fmt.Println("stock done")
 	}()
 	return nil
 }
