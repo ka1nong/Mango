@@ -12,7 +12,7 @@ const (
 	STOCKINFO_HIGHT               = "hight"
 	STOCKINFO_LOW                 = "low"
 	STOCKINFO_CLOSE               = "close"
-	STOCKINFO_CHANGE              = "change"
+	STOCKINFO_CHANGE              = "hange" //什么鬼，语法不能插入change字段，会报错。我操。只能把change改成hange
 	STOCKINFO_VOLUME              = "volume"
 	STOCKINFO_MONEY               = "money"
 	STOCKINFO_TRADED_MARKET_VALUE = "traded_market_value"
@@ -28,7 +28,7 @@ const (
 )
 
 const (
-	USER     = "huangchen"
+	USER     = "root"
 	PASSWORD = "199212"
 	DATABASE = "historyStock"
 )

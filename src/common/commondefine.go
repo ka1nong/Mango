@@ -12,7 +12,7 @@ const (
 	STOCKINFO_HIGHT               = "hight"
 	STOCKINFO_LOW                 = "low"
 	STOCKINFO_CLOSE               = "close"
-	STOCKINFO_CHANGE              = "change"
+	STOCKINFO_CHANGE              = "hange"
 	STOCKINFO_VOLUME              = "volume"
 	STOCKINFO_MONEY               = "money"
 	STOCKINFO_TRADED_MARKET_VALUE = "traded_market_value"

@@ -4,21 +4,21 @@ import "fmt"
 import "bufio"
 import "strconv"
 import "os"
-import "historyStock"
+import "historyStock/data"
 
 func main() {
 
 	for {
 		fmt.Println("//------------------")
-		fmt.Println("//1.峰值分析法------")
+		fmt.Println("//1.load historyStock------")
 		fmt.Println("//------------------")
 		fmt.Println("//------------------")
 		fmt.Println("//0. 退出-----------")
 		fmt.Println("//------------------")
 		fmt.Println("please enter key.")
 		reader := bufio.NewReader(os.Stdin)
-		ch, _ := reader.ReadBytes('\n')
-		chose, err := strconv.Atoi(string(ch))
+		_, _ = reader.ReadBytes('\n')
+		chose, err := strconv.Atoi(string("1"))
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -27,7 +27,10 @@ func main() {
 		case 0:
 			return
 		case 1:
-
+			err = historyStock.StartLoadData()
+			if err != nil {
+				fmt.Println(err)
+			}
 			break
 		default:
 			fmt.Println("chose error!")
