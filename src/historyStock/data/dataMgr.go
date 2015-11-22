@@ -80,16 +80,20 @@ func parseFileFromCSV(stocksText string, filename string) error {
 
 	stockInfos := strings.Split(stocksText, "\n")
 	stockInfos = stockInfos[1:]
-
+	
+	count :=0
 	errHandle := func(param *float64, str string) error {
 		v, err := strconv.Atoi(str)
 		if err != nil {
-			fmt.Print(err)
-			fmt.Print(" ")
-			fmt.Print(*param)
-			fmt.Print("  ")
-			fmt.Println(filename)
-			return err
+			//fmt.Print(err)
+			//fmt.Print(" ")
+			//fmt.Print(str)
+			//fmt.Print("  ")
+			//fmt.Print(count)
+		//	fmt.Print("  ")
+		//	fmt.Println(filename)
+			//return err
+			return nil
 		}
 		*param = float64(v)
 		return nil
@@ -97,8 +101,12 @@ func parseFileFromCSV(stocksText string, filename string) error {
 	for _, v := range stockInfos {
 		infos := strings.Split(v, ",")
 		if len(infos) != 19 {
-			return err
+			fmt.Print(count)
+			fmt.Print("  ")
+			fmt.Println("infos count != 19")
+			continue
 		}
+		count ++
 		param1 := infos[1]
 		param2, err := strconv.ParseFloat(infos[2], 64)
 		if err != nil {
@@ -242,21 +250,26 @@ func parseDapanFileFromCSV(stocksText string, filename string) error {
 	errHandle := func(param *float64, str string) error {
 		v, err := strconv.Atoi(str)
 		if err != nil {
-			fmt.Print(err)
-			fmt.Print(" ")
-			fmt.Print(*param)
-			fmt.Print("  ")
-			fmt.Println(filename)
-			return err
+			//fmt.Print(err)
+		//	fmt.Print(" ")
+		//	fmt.Print(*param)
+		//	fmt.Print("  ")
+		//	fmt.Println(filename)
+		//	return er
+			return nil
 		}
 		*param = float64(v)
 		return nil
 	}
+	count := 0
 	for _, v := range stockInfos {
 		infos := strings.Split(v, ",")
 		if len(infos) != 9 {
-			return err
+			fmt.Print(count)
+			fmt.Println("stock info count != 19")
+			continue
 		}
+		count ++
 		param1 := infos[1]
 		param2, err := strconv.ParseFloat(infos[2], 64)
 		if err != nil {
