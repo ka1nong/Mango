@@ -61,6 +61,12 @@ func (mgr *DownloadMgr) getOnlyName() (localPathName string, err error) {
 	return filePath + strconv.Itoa(count), nil
 }
 
+func (mgr *DownloadMgr) RemoveFile(fileName string) {
+	if _, err := os.Stat(fileName); err == nil {
+		os.Remove(fileName)
+	}
+}
+
 func (mgr *DownloadMgr) init() {
 	filePath := "../"
 	count := 1

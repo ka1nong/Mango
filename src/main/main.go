@@ -5,9 +5,15 @@ import "bufio"
 import "strconv"
 import "os"
 import _ "historyStock/data"
+import "onlineStock/data"
 
 func main() {
-
+	//	mycontent := " my dear令"
+	//	email := NewEmail("546958900@qq.com;546958900@qq.com;", "test golang email", mycontent)
+	//	effdrr := SendEmail(email)
+	//	if effdrr != nil {
+	//		fmt.Println(effdrr)
+	//	}
 	a := true
 	for {
 		fmt.Println("//------------------")
@@ -27,15 +33,15 @@ func main() {
 		if a == false {
 			return
 		}
-		a = false
+		a = true
 		switch chose {
 		case 0:
 			return
 		case 1:
-			//err = historyStock.StartLoadData()
-			//if err != nil {
-			//	fmt.Println(err)
-			//}
+			err = onlineStock.StartLoadOnlineData()
+			if err != nil {
+				fmt.Println(err)
+			}
 			break
 		default:
 			fmt.Println("chose error!")
