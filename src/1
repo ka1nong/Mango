@@ -130,7 +130,7 @@
         <div class="hisacc">
             <div id="histit" class="tit">最近访问：</div>
             <div id="historyest" class="list tile"></div>
-            <div class="tb1105"><b></b><a href="http://js1.eastmoney.com/tg.aspx?ID=3979" target="_blank" class="red">盘面发出重要信号</a></div>
+            <div class="tb1105"><b></b><a href="http://js1.eastmoney.com/tg.aspx?ID=3979" target="_blank" class="red">熔断机制元旦后空降A股</a></div>
         </div>
     </div>
 </div>
@@ -1114,7 +1114,7 @@
             
             <li><a target="_blank" href="http://quote.eastmoney.com/sh600310.html">桂东电力(600310)</a></li>
             
-            <li><a target="_blank" href="http://quote.eastmoney.com/sh600311.html">荣华实业(600311)</a></li>
+            <li><a target="_blank" href="http://quote.eastmoney.com/sh600311.html">ST荣华(600311)</a></li>
             
             <li><a target="_blank" href="http://quote.eastmoney.com/sh600312.html">平高电气(600312)</a></li>
             
@@ -2325,6 +2325,8 @@
             <li><a target="_blank" href="http://quote.eastmoney.com/sh601137.html">博威合金(601137)</a></li>
             
             <li><a target="_blank" href="http://quote.eastmoney.com/sh601139.html">深圳燃气(601139)</a></li>
+            
+            <li><a target="_blank" href="http://quote.eastmoney.com/sh601155.html">新城控股(601155)</a></li>
             
             <li><a target="_blank" href="http://quote.eastmoney.com/sh601158.html">重庆水务(601158)</a></li>
             
@@ -6818,7 +6820,7 @@
             
             <li><a target="_blank" href="http://quote.eastmoney.com/sz300079.html">数码视讯(300079)</a></li>
             
-            <li><a target="_blank" href="http://quote.eastmoney.com/sz300080.html">新大新材(300080)</a></li>
+            <li><a target="_blank" href="http://quote.eastmoney.com/sz300080.html">易成新能(300080)</a></li>
             
             <li><a target="_blank" href="http://quote.eastmoney.com/sz300081.html">恒信移动(300081)</a></li>
             

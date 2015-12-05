@@ -212,7 +212,7 @@ func parseRemoteStockMapByUL(stocksText string) (stockMap map[string]stockInfo, 
 	return stockMap, err
 }
 
-func isStockUpdateTime() bool {
+func isStockUpdateTime() (result bool, err error) {
 	dwMgr := download.Instance()
 
 	contextFunc := func() (text string, err error) {
@@ -238,20 +238,19 @@ func isStockUpdateTime() bool {
 	}
 
 	originText, err := contextFunc()
-	if err != nil {
-		//send email
-		return false
+	if err != nil || len(originText) == 0 {
+		return false, Error("err")
 	}
-	time.Sleep(time.Second * 1) //------------------------------
+	time.Sleep(time.Second * 60 * 60)
 	text, err := contextFunc()
-	if err != nil {
+	if err != nil || len(originText) == 0 {
 		//send email
-		return false
+		return false, Error("err")
 	}
 	if strings.EqualFold(originText, text) {
-		return false
+		return true, nil
 	}
-	return true
+	return false, nil
 }
 
 func CreateStockDataBase(stockStr string, db *sql.DB) error {
@@ -263,10 +262,12 @@ func CreateStockDataBase(stockStr string, db *sql.DB) error {
 	return nil
 }
 
-func realTimeUpdate(code []string, address []int) {
+func realTimeUpdate(code []string, address []int, done chan error) {
 	db, err := createDatabase()
 	if err != nil {
+		done <- err
 		fmt.Println(err)
+		return
 	}
 	defer db.Close()
 	var stockStr string
@@ -278,21 +279,40 @@ func realTimeUpdate(code []string, address []int) {
 		}
 		err := CreateStockDataBase(stockStr, db)
 		if err != nil {
+			done <- err
 			fmt.Println(err)
 			return
 		}
 	}
+	fmt.Println("start real time update stock")
 	dwMgr := download.Instance()
+	errParseCount := 0
+	errUpdateCount := 0
 	for {
-		if isStockUpdateTime() {
+		re, err := isStockUpdateTime()
+		if err != nil {
+			errUpdateCount++
+		}
+		if errUpdateCount > 100 {
+			fmt.Println(err)
+			errUpdateCount = 0
+		}
+
+		if re && err == nil {
 			for i := 0; i < len(code); i++ {
 				localPath, err := dwMgr.Download(string("http://hq.sinajs.cn/list=") + string("sh") + code[i])
 				buf, err := ioutil.ReadFile(localPath)
 				if err != nil {
 					dwMgr.RemoveFile(localPath)
-					fmt.Println(err)
 				}
-				ParseStockByUrl(stockStr, string(buf), db)
+				err = ParseStockByUrl(stockStr, string(buf), db)
+				if err != nil {
+					errParseCount++
+				}
+				if errParseCount > 2000 {
+					fmt.Println(err)
+					errParseCount = 0
+				}
 				dwMgr.RemoveFile(localPath)
 			}
 		}
@@ -364,12 +384,29 @@ func StartLoadOnlineData() error {
 		}
 	}
 	syncCount := i / 50
+
+	var dones []chan error
+	if i%50 != 0 {
+		dones = make([]chan error, syncCount+1)
+	} else {
+		dones = make([]chan error, syncCount)
+	}
+
 	j := 0
 	for ; j < syncCount; j++ {
-		go realTimeUpdate(codes[j*50:j*50+50], address[j*50:j*50+50])
+		dones[j] = make(chan error)
+		go realTimeUpdate(codes[j*50:j*50+50], address[j*50:j*50+50], dones[j])
 	}
 	if (i - j*50) != 0 {
-		go realTimeUpdate(codes[j*50:i], address[j*50:i])
+		dones[len(dones)-1] = make(chan error)
+		go realTimeUpdate(codes[j*50:i], address[j*50:i], dones[len(dones)-1])
+	}
+
+	for _, ch := range dones {
+		err = <-ch
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 	return nil
 }

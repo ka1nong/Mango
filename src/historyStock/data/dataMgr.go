@@ -80,8 +80,8 @@ func parseFileFromCSV(stocksText string, filename string) error {
 
 	stockInfos := strings.Split(stocksText, "\n")
 	stockInfos = stockInfos[1:]
-	
-	count :=0
+
+	count := 0
 	errHandle := func(param *float64, str string) error {
 		v, err := strconv.Atoi(str)
 		if err != nil {
@@ -90,8 +90,8 @@ func parseFileFromCSV(stocksText string, filename string) error {
 			//fmt.Print(str)
 			//fmt.Print("  ")
 			//fmt.Print(count)
-		//	fmt.Print("  ")
-		//	fmt.Println(filename)
+			//	fmt.Print("  ")
+			//	fmt.Println(filename)
 			//return err
 			return nil
 		}
@@ -106,7 +106,7 @@ func parseFileFromCSV(stocksText string, filename string) error {
 			fmt.Println("infos count != 19")
 			continue
 		}
-		count ++
+		count++
 		param1 := infos[1]
 		param2, err := strconv.ParseFloat(infos[2], 64)
 		if err != nil {
@@ -251,11 +251,11 @@ func parseDapanFileFromCSV(stocksText string, filename string) error {
 		v, err := strconv.Atoi(str)
 		if err != nil {
 			//fmt.Print(err)
-		//	fmt.Print(" ")
-		//	fmt.Print(*param)
-		//	fmt.Print("  ")
-		//	fmt.Println(filename)
-		//	return er
+			//	fmt.Print(" ")
+			//	fmt.Print(*param)
+			//	fmt.Print("  ")
+			//	fmt.Println(filename)
+			//	return er
 			return nil
 		}
 		*param = float64(v)
@@ -269,7 +269,7 @@ func parseDapanFileFromCSV(stocksText string, filename string) error {
 			fmt.Println("stock info count != 19")
 			continue
 		}
-		count ++
+		count++
 		param1 := infos[1]
 		param2, err := strconv.ParseFloat(infos[2], 64)
 		if err != nil {
@@ -387,27 +387,49 @@ func parseFiles(stockfiles []string, isDaPan bool) error {
 }
 
 func StartLoadData() error {
+	done := make(chan error, 2)
+	defer close(done)
 	go func() {
+
 		stockfiles, err := walkDir("/mnt/index data", ".csv")
+
 		if err != nil {
 			fmt.Println(err)
 		}
-		err = parseFiles(stockfiles, true)
-		if err != nil {
-			fmt.Println(err)
+		if len(stockfiles) == 0 {
+			err = Error("stock files empty")
+		} else {
+			err = parseFiles(stockfiles, true)
+			if err != nil {
+				fmt.Println(err)
+			}
 		}
-		fmt.Println("dapan done")
+
+		done <- err
 	}()
 	go func() {
 		stockfiles, err := walkDir("/mnt/stock data", ".csv")
 		if err != nil {
 			fmt.Println(err)
 		}
-		err = parseFiles(stockfiles, false)
-		if err != nil {
-			fmt.Println(err)
+		if len(stockfiles) == 0 {
+			err = Error("stock files empty")
+		} else {
+			err = parseFiles(stockfiles, false)
+			if err != nil {
+				fmt.Println(err)
+			}
 		}
-		fmt.Println("stock done")
+
+		done <- err
 	}()
+
+	for i := 0; i < 2; i++ {
+		err := <-done
+		if err != nil {
+			return err
+		}
+	}
+	fmt.Println("done")
 	return nil
 }
