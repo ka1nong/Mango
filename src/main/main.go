@@ -30,7 +30,6 @@ func main() {
 	*/
 	id := flag.Int("id", 0, "id")
 	flag.Parse()
-	*id = 2
 	switch *id {
 	case 0:
 		return
